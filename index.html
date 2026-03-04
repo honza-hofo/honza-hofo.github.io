@@ -1069,15 +1069,10 @@
         document.getElementById('mapClinicsList').innerHTML = '<div class="loading-spinner"></div>';
         searchTimeout = setTimeout(function() {
             var results = [];
+            // Search physioData (CZ, SK, PL, DE, AT)
             var data = physioData;
-            var countryPrefixes = {cz:true, sk:true, pl:true, de:true, at:true};
             for (var regionKey in data) {
                 if (!data.hasOwnProperty(regionKey)) continue;
-                var prefix = regionKey.split('_')[0];
-                if (prefix.length > 2) prefix = regionKey.substring(0, 2);
-                var isCzRegion = !regionKey.match(/^(sk_|pl_|de_|at_)/);
-                var belongsToCountry = (currentCountry === 'cz' && isCzRegion) || (prefix === currentCountry);
-                if (!belongsToCountry) continue;
                 var clinics = data[regionKey].clinics || [];
                 for (var i = 0; i < clinics.length; i++) {
                     var c = clinics[i];
@@ -1090,6 +1085,24 @@
                     }
                 }
                 if (results.length >= 50) break;
+            }
+            // Search countryData (all other loaded countries)
+            if (results.length < 50 && window.countryData) {
+                for (var cc in window.countryData) {
+                    var arr = window.countryData[cc];
+                    if (!Array.isArray(arr)) continue;
+                    for (var j = 0; j < arr.length; j++) {
+                        var c2 = arr[j];
+                        var match2 = (c2.name && c2.name.toLowerCase().indexOf(query) !== -1) ||
+                                    (c2.city && c2.city.toLowerCase().indexOf(query) !== -1) ||
+                                    (c2.addr && c2.addr.toLowerCase().indexOf(query) !== -1);
+                        if (match2) {
+                            results.push(c2);
+                            if (results.length >= 50) break;
+                        }
+                    }
+                    if (results.length >= 50) break;
+                }
             }
             // Show results
             document.getElementById('mapDetailDefault').style.display = 'none';
@@ -1545,6 +1558,45 @@
             maxZoom: 19,
             subdomains: 'abcd'
         }).addTo(_leafletMap);
+
+        // GPS Locate button
+        var locateBtn = L.control({position: 'topleft'});
+        locateBtn.onAdd = function() {
+            var div = L.DomUtil.create('div', 'leaflet-bar');
+            div.innerHTML = '<a href="#" title="Moje poloha" style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;background:#fff;font-size:18px;text-decoration:none;color:#333;" id="leafletLocateBtn">&#9678;</a>';
+            L.DomEvent.disableClickPropagation(div);
+            div.querySelector('a').addEventListener('click', function(e) {
+                e.preventDefault();
+                if (!navigator.geolocation) return;
+                this.style.color = '#2563eb';
+                var self = this;
+                navigator.geolocation.getCurrentPosition(function(pos) {
+                    var lat = pos.coords.latitude;
+                    var lng = pos.coords.longitude;
+                    _userLocation = {lat: lat, lng: lng};
+                    if (_leafletMap) {
+                        _leafletMap.setView([lat, lng], 13);
+                        // Add/update user marker
+                        if (window._userMarker) { _leafletMap.removeLayer(window._userMarker); }
+                        var userIcon = L.divIcon({
+                            className: '',
+                            html: '<div style="width:18px;height:18px;border-radius:50%;background:#2563eb;border:3px solid #fff;box-shadow:0 0 0 3px rgba(37,99,235,0.3),0 2px 6px rgba(0,0,0,0.3);"></div>',
+                            iconSize: [18, 18], iconAnchor: [9, 9], popupAnchor: [0, -10]
+                        });
+                        window._userMarker = L.marker([lat, lng], {icon: userIcon, zIndexOffset: 1000})
+                            .addTo(_leafletMap)
+                            .bindPopup('<div style="font-family:Poppins,sans-serif;font-size:13px;font-weight:600;">Vaše poloha</div>')
+                            .openPopup();
+                    }
+                    self.style.color = '#333';
+                }, function() {
+                    self.style.color = '#dc2626';
+                    setTimeout(function() { self.style.color = '#333'; }, 2000);
+                }, {enableHighAccuracy: true, timeout: 10000});
+            });
+            return div;
+        };
+        locateBtn.addTo(_leafletMap);
 
         // Marker colors by type
         var markerColors = {vet:'#7c3aed', hospital:'#E30A14', physio:'#22c55e', ambulance:'#3b82f6'};
