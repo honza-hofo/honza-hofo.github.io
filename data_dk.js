@@ -1,5 +1,6 @@
 window.countryData = window.countryData || {};
 window.countryData.DK = [
+  {"type": "vet", "lat": 56.3948, "lng": 9.8993},
   {"name": "Aabenraa Dyrehospital", "type": "vet", "lat": 55.0806, "lng": 9.3864, "tel": "+4573706708", "url": "https://vetgruppen.dk/aabenraa-dyrehospital/"},
   {"name": "Aalborg Dyrehospital", "type": "vet", "lat": 57.021, "lng": 9.8971, "hours": "Tu-Fr 08:00-17:00; Mo 08:00-18:00"},
   {"name": "Aarhus Dyrehospital", "type": "vet", "lat": 56.1162, "lng": 10.1397},
@@ -65,7 +66,6 @@ window.countryData.DK = [
   {"name": "Hadsund Dyreklinik", "type": "vet", "lat": 56.721, "lng": 10.1246},
   {"name": "Han Herred Dyrlægerne", "type": "vet", "lat": 57.0882, "lng": 9.2632},
   {"name": "Hinnerup Dyrehospital", "type": "vet", "lat": 56.254, "lng": 10.0729, "tel": "+45 86 96 23 00", "url": "https://frijsenborgvet.dk/", "email": "post@frijsenborgvet.dk"},
-  {"name": "Holstebro Dyrehospital", "type": "vet", "lat": 56.3752, "lng": 8.619, "tel": "+4597421799", "url": "https://www.hhd.dk/"},
   {"name": "Holsted Dyreklinic", "type": "vet", "lat": 55.5107, "lng": 8.9178, "tel": "+45 31 10 66 70", "hours": "Mo-Th 08:00-15:00; Fr 08:00-14:00"},
   {"name": "Huholt Hestepension", "type": "shelter", "lat": 54.9086, "lng": 9.8452},
   {"name": "Hundepension Tierisch Menschlich", "type": "shelter", "lat": 54.6943, "lng": 8.5705},

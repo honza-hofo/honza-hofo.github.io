@@ -1,5 +1,11 @@
 window.countryData = window.countryData || {};
 window.countryData.LT = [
+  {"type": "vet", "lat": 54.1494, "lng": 25.3132},
+  {"type": "vet", "lat": 54.9365, "lng": 23.8893},
+  {"type": "vet", "lat": 54.6944, "lng": 25.2257},
+  {"type": "vet", "lat": 54.9868, "lng": 25.7699},
+  {"type": "vet", "lat": 55.3399, "lng": 26.1625},
+  {"type": "vet", "lat": 55.7352, "lng": 24.3585},
   {"type": "vet", "lat": 54.6258, "lng": 24.9341, "tel": "+37068579468", "hours": "Mo-Fr 10:00-12:00, 16:00-20:00; Sa 10:00-12:00"},
   {"name": "Baltijos jūros gyvūnų reabilitacijos centras", "type": "shelter", "lat": 55.7191, "lng": 21.0995},
   {"name": "Eufera", "type": "shelter", "lat": 55.307, "lng": 23.9189},
@@ -77,7 +83,6 @@ window.countryData.LT = [
   {"name": "Ветлячэбніца", "type": "vet", "lat": 54.1572, "lng": 25.3121},
   {"name": "Раённая ветэрынарная станцыя", "type": "vet", "lat": 53.9434, "lng": 25.7608},
   {"name": "Раённая ветэрынарная станцыя", "type": "vet", "lat": 54.47, "lng": 26.3967},
-  {"type": "vet", "lat": 54.6258, "lng": 24.9341, "tel": "+37068579468", "hours": "Mo-Fr 10:00-12:00, 16:00-20:00; Sa 10:00-12:00"},
   {"name": "Doggy Dog", "type": "vet", "lat": 55.9263, "lng": 23.3199},
   {"name": "Ruvera", "type": "vet", "lat": 55.9571, "lng": 23.332},
   {"name": "Savaveta", "type": "vet", "lat": 54.8893, "lng": 23.9304},

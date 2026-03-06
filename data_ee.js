@@ -58,7 +58,6 @@ window.countryData.EE = [
   {"name": "EriVet", "city": "Tallinn", "type": "vet", "lat": 59.399, "lng": 24.6863, "tel": "+372 600 6262", "url": "https://www.erivet.ee/", "email": "info@erivet.ee", "hours": "Mo-Fr 09:00-17:00"},
   {"name": "Esteetvet", "city": "Tallinn", "type": "vet", "lat": 59.4075, "lng": 24.7347, "email": "info@esteetvet.ee", "hours": "Mo-Su 10:00-19:00"},
   {"name": "MIKI", "city": "Tallinn", "type": "vet", "lat": 59.4313, "lng": 24.7752, "tel": "+372 6333 398", "url": "https://miki.ee/", "email": "info@miki.ee", "hours": "Mo-Fr 09:00-18:00; Sa-Su 09:00-15:00"},
-  {"name": "Miki", "city": "Tallinn", "type": "vet", "lat": 59.4309, "lng": 24.7767, "tel": "+3726333398", "hours": "Mo-Fr 09:00-18:00; Sa 09:00-15:00; Su 10:00-15:00"},
   {"name": "NordicVet loomakliinik", "city": "Tallinn", "type": "vet", "lat": 59.4258, "lng": 24.7187, "tel": "+372 55545522;+372 6355222", "url": "https://nordicvet.ee/", "email": "info@nordicvet.ee", "hours": "Mo-Fr 09:00-17:00"},
   {"name": "Tiina Toometi Kliinik OÜ", "city": "Tallinn", "type": "vet", "lat": 59.4325, "lng": 24.713, "tel": "+372 6413111;+372 6413110", "url": "https://www.toometikliinik.ee/", "email": "info@toometikliinik.ee", "hours": "Mo-Fr 09:00-20:00; Sa 10:00-17:00"},
   {"name": "Timmu Loomaklinik", "city": "Tallinn", "type": "vet", "lat": 59.4175, "lng": 24.6931, "tel": "+372 6675676", "url": "https://timmu.ee/", "email": "timmu@evidensia.ee", "hours": "Mo-Fr 09:00-19:00"},

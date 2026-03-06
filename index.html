@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Veterinární mapa Evropy | ManMat</title>
-    <meta name="description" content="Interaktivní mapa veterinárních klinik, nemocnic, pohotovostí a zvířecích sanitek po celé Evropě. Najdi nejbližší pomoc pro svého psa.">
+    <title>Mapa veteriny ČR & SR | Makej s ManMatem</title>
+    <meta name="description" content="Interaktivní mapa psích fyzioterapeutů, veterinárních nemocnic a zvířecích sanitek v České republice a na Slovensku.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -260,7 +260,7 @@
     <section class="hero">
         <div class="hero-inner">
             <h1>Veterina po celé <span>Evropě</span></h1>
-            <p>Interaktivní mapa veterinárních klinik, nemocnic, pohotovostí a zvířecích sanitek po celé Evropě. Vyber zemi, klikni na kraj a najdi nejbližší pomoc pro svého mazlíčka.</p>
+            <p>Interaktivní mapa psích fyzioterapeutů, veterinárních nemocnic, pohotovostí a zvířecích sanitek v Česku, na Slovensku, v Polsku, Německu a Rakousku. Klikni na kraj a najdi nejbližší pomoc pro svého psa.</p>
             <div class="hero-accent"></div>
         </div>
     </section>
@@ -713,35 +713,6 @@
     var countryMeta = window.countryMeta || {};
     var svgCountries = ['cz','sk','pl','de','at'];
 
-    // Calculate initial stats from physioData
-    (function updateStats() {
-        var total=0, physio=0, hosp=0, amb=0, vet=0, regs=0;
-        for (var key in physioData) {
-            if (!physioData[key].clinics) continue;
-            regs++;
-            physioData[key].clinics.forEach(function(c) {
-                total++;
-                if (c.type==='physio') physio++;
-                else if (c.type==='hospital'||c.type==='vet_hospital') hosp++;
-                else if (c.type==='ambulance'||c.type==='shelter') amb++;
-                else vet++;
-            });
-        }
-        // Add non-SVG countries from countryMeta
-        for (var cc in countryMeta) {
-            if (svgCountries.indexOf(cc.toLowerCase()) === -1) {
-                total += countryMeta[cc].count || 0;
-                vet += countryMeta[cc].count || 0;
-            }
-        }
-        document.getElementById('totalCount').textContent = total.toLocaleString();
-        document.getElementById('physioCount').textContent = physio.toLocaleString();
-        document.getElementById('hospitalCount').textContent = hosp.toLocaleString();
-        document.getElementById('ambulanceCount').textContent = amb.toLocaleString();
-        document.getElementById('vetCount').textContent = vet.toLocaleString();
-        document.getElementById('regionCount').textContent = regs.toLocaleString();
-    })();
-
     // ===== DYNAMIC COUNTRY TABS =====
     (function() {
         var tabsEl = document.getElementById('countryTabs');
@@ -782,26 +753,6 @@
     }
 
     // ===== SHOW NON-SVG COUNTRY ON LEAFLET =====
-    // Normalize short keys from data_XX.js to full keys used by buildCard
-    function normalizeClinic(c) {
-        return {
-            name: c.name || c.n || '',
-            city: c.city || c.ci || '',
-            addr: c.addr || c.a || '',
-            tel: c.tel || c.p || '',
-            url: c.url || c.w || '',
-            hours: c.hours || c.h || '',
-            email: c.email || '',
-            lat: c.lat, lng: c.lng,
-            type: c.type || 'vet',
-            sos: c.sos || 0,
-            spec: c.spec || (c.tags ? (function(t){ try { var p=JSON.parse(t); return p.specialists||[]; } catch(e){ return []; } })(c.tags) : []),
-            rsv: c.rsv || 0,
-            wa: c.wa || '',
-            desc: c.desc || ''
-        };
-    }
-
     function showGenericCountry(cc) {
         var ccUp = cc.toUpperCase();
         loadCountryData(cc, function(clinics) {
@@ -809,8 +760,6 @@
                 document.getElementById('mapClinicsList').innerHTML = '<p style="text-align:center;color:#999;padding:40px;">Načítání dat...</p>';
                 return;
             }
-            // Normalize data keys
-            clinics = clinics.map(normalizeClinic);
             // Create a virtual region in physioData
             var regionKey = cc + '_all';
             var meta = countryMeta[ccUp] || {};
@@ -884,9 +833,7 @@
             var marker = L.circleMarker([c.lat, c.lng], {
                 radius: 5, fillColor: col, color: '#fff', weight: 1, fillOpacity: 0.8
             }).addTo(_leafletMap);
-            var popName = c.name || c.n || '';
-            var popCity = c.city || c.ci || '';
-            marker.bindPopup('<strong>' + popName + '</strong>' + (popCity ? '<br><span style="color:#888;">' + popCity + '</span>' : ''));
+            marker.bindPopup('<strong>' + (c.name||'') + '</strong><br><span style="color:#888;">' + (c.city||'') + '</span>');
         });
     }
 
@@ -1069,10 +1016,15 @@
         document.getElementById('mapClinicsList').innerHTML = '<div class="loading-spinner"></div>';
         searchTimeout = setTimeout(function() {
             var results = [];
-            // Search physioData (CZ, SK, PL, DE, AT)
             var data = physioData;
+            var countryPrefixes = {cz:true, sk:true, pl:true, de:true, at:true};
             for (var regionKey in data) {
                 if (!data.hasOwnProperty(regionKey)) continue;
+                var prefix = regionKey.split('_')[0];
+                if (prefix.length > 2) prefix = regionKey.substring(0, 2);
+                var isCzRegion = !regionKey.match(/^(sk_|pl_|de_|at_)/);
+                var belongsToCountry = (currentCountry === 'cz' && isCzRegion) || (prefix === currentCountry);
+                if (!belongsToCountry) continue;
                 var clinics = data[regionKey].clinics || [];
                 for (var i = 0; i < clinics.length; i++) {
                     var c = clinics[i];
@@ -1085,24 +1037,6 @@
                     }
                 }
                 if (results.length >= 50) break;
-            }
-            // Search countryData (all other loaded countries)
-            if (results.length < 50 && window.countryData) {
-                for (var cc in window.countryData) {
-                    var arr = window.countryData[cc];
-                    if (!Array.isArray(arr)) continue;
-                    for (var j = 0; j < arr.length; j++) {
-                        var c2 = arr[j];
-                        var match2 = (c2.name && c2.name.toLowerCase().indexOf(query) !== -1) ||
-                                    (c2.city && c2.city.toLowerCase().indexOf(query) !== -1) ||
-                                    (c2.addr && c2.addr.toLowerCase().indexOf(query) !== -1);
-                        if (match2) {
-                            results.push(c2);
-                            if (results.length >= 50) break;
-                        }
-                    }
-                    if (results.length >= 50) break;
-                }
             }
             // Show results
             document.getElementById('mapDetailDefault').style.display = 'none';
@@ -1158,9 +1092,9 @@
         if (c.rsv) {
             html += '<span style="font-size:10px;background:#ecfdf5;color:#059669;padding:2px 6px;border-radius:4px;font-weight:600;">Online rezervace</span> ';
         }
-        html += '<h4>' + (c.name || 'Veterinární klinika') + '</h4>';
-        if (c.city) html += '<p class="city">' + c.city + '</p>';
-        if (c.desc) html += '<p class="desc">' + c.desc + '</p>';
+        html += '<h4>' + c.name + '</h4>';
+        html += '<p class="city">' + c.city + '</p>';
+        html += '<p class="desc">' + (c.desc || '') + '</p>';
 
         // Hours - prominent display
         if (c.hours) {
@@ -1188,12 +1122,15 @@
 
         // Action buttons
         html += '<div class="clinic-actions">';
-        if (c.lat && c.lng) {
-            var destParam = c.lat + ',' + c.lng;
-            var googleUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + destParam;
-            var wazeUrl = 'https://waze.com/ul?ll=' + destParam + '&navigate=yes';
+        if (c.addr && c.addr !== 'Výjezdová služba') {
+            var encodedAddr = encodeURIComponent(c.addr);
+            var googleUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + encodedAddr;
+            var wazeUrl = 'https://waze.com/ul?q=' + encodedAddr + '&navigate=yes';
             html += '<a href="' + googleUrl + '" target="_blank" rel="noopener" class="btn-nav"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> Google Maps</a>';
             html += '<a href="' + wazeUrl + '" target="_blank" rel="noopener" class="btn-nav" style="background:#33ccff;"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg> Waze</a>';
+        }
+        if (c.url && c.url !== '#') {
+            html += '<a href="' + c.url + '" target="_blank" rel="noopener" class="btn-web" style="background:#16a34a;"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> Objednat</a>';
         }
         if (c.url && c.url !== '#') {
             html += '<a href="' + c.url + '" target="_blank" rel="noopener" class="btn-web"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg> Web</a>';
@@ -1205,13 +1142,11 @@
             html += '<a href="https://wa.me/' + c.wa + '" target="_blank" rel="noopener" class="btn-web" style="background:#25D366;"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.832-1.438A9.96 9.96 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/></svg> WhatsApp</a>';
         }
         if (c.tel) {
-            var telClean = c.tel.replace(/[\s./-]/g, '');
-            var telHref = (telClean.indexOf('+') === 0) ? telClean : telClean;
-            var phoneSvg = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>';
+            var telPrefix = (c.tel && c.tel.indexOf('+') === 0) ? '' : '+420';
             if (isSOS) {
-                html += '<a href="tel:' + telHref + '" class="btn-tel" style="background:#dc2626;font-size:14px;padding:10px 16px;font-weight:700;">' + phoneSvg.replace('width="13" height="13"','width="15" height="15"') + ' VOLAT HNED</a>';
+                html += '<a href="tel:' + telPrefix + c.tel.replace(/\s/g, '') + '" class="btn-tel" style="background:#dc2626;font-size:14px;padding:10px 16px;font-weight:700;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg> VOLAT HNED</a>';
             } else {
-                html += '<a href="tel:' + telHref + '" class="btn-tel">' + phoneSvg + ' Volat</a>';
+                html += '<a href="tel:' + telPrefix + c.tel.replace(/\s/g, '') + '" class="btn-tel"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg> Volat</a>';
             }
         }
         html += '</div>';
@@ -1559,45 +1494,6 @@
             subdomains: 'abcd'
         }).addTo(_leafletMap);
 
-        // GPS Locate button
-        var locateBtn = L.control({position: 'topleft'});
-        locateBtn.onAdd = function() {
-            var div = L.DomUtil.create('div', 'leaflet-bar');
-            div.innerHTML = '<a href="#" title="Moje poloha" style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;background:#fff;font-size:18px;text-decoration:none;color:#333;" id="leafletLocateBtn">&#9678;</a>';
-            L.DomEvent.disableClickPropagation(div);
-            div.querySelector('a').addEventListener('click', function(e) {
-                e.preventDefault();
-                if (!navigator.geolocation) return;
-                this.style.color = '#2563eb';
-                var self = this;
-                navigator.geolocation.getCurrentPosition(function(pos) {
-                    var lat = pos.coords.latitude;
-                    var lng = pos.coords.longitude;
-                    _userLocation = {lat: lat, lng: lng};
-                    if (_leafletMap) {
-                        _leafletMap.setView([lat, lng], 13);
-                        // Add/update user marker
-                        if (window._userMarker) { _leafletMap.removeLayer(window._userMarker); }
-                        var userIcon = L.divIcon({
-                            className: '',
-                            html: '<div style="width:18px;height:18px;border-radius:50%;background:#2563eb;border:3px solid #fff;box-shadow:0 0 0 3px rgba(37,99,235,0.3),0 2px 6px rgba(0,0,0,0.3);"></div>',
-                            iconSize: [18, 18], iconAnchor: [9, 9], popupAnchor: [0, -10]
-                        });
-                        window._userMarker = L.marker([lat, lng], {icon: userIcon, zIndexOffset: 1000})
-                            .addTo(_leafletMap)
-                            .bindPopup('<div style="font-family:Poppins,sans-serif;font-size:13px;font-weight:600;">Vaše poloha</div>')
-                            .openPopup();
-                    }
-                    self.style.color = '#333';
-                }, function() {
-                    self.style.color = '#dc2626';
-                    setTimeout(function() { self.style.color = '#333'; }, 2000);
-                }, {enableHighAccuracy: true, timeout: 10000});
-            });
-            return div;
-        };
-        locateBtn.addTo(_leafletMap);
-
         // Marker colors by type
         var markerColors = {vet:'#7c3aed', hospital:'#E30A14', physio:'#22c55e', ambulance:'#3b82f6'};
         var typeLabels = {vet:'Vet', hospital:'Nemocnice', physio:'Fyzio', ambulance:'Sanitka'};
@@ -1655,15 +1551,13 @@
                 var sosBadge = isEmergency ? '<span style="background:#dc2626;color:#fff;font-size:10px;padding:1px 6px;border-radius:4px;font-weight:700;margin-left:4px;">SOS 24/7</span>' : '';
                 var waBadge = c.wa ? '<br><a href="https://wa.me/' + c.wa + '" target="_blank" style="color:#25D366;font-weight:600;text-decoration:none;">WhatsApp</a>' : '';
                 var specBadge = c.spec ? '<br><span style="font-size:11px;color:#6366f1;">' + c.spec.join(', ') + '</span>' : '';
-                var navLink = c.lat && c.lng ? '<br><a href="https://www.google.com/maps/dir/?api=1&destination=' + c.lat + ',' + c.lng + '" target="_blank" style="display:inline-block;margin-top:4px;background:#1d4ed8;color:#fff;padding:4px 10px;border-radius:6px;text-decoration:none;font-size:11px;font-weight:700;">NAVIGOVAT</a>' : '';
                 var marker = L.marker(coords, {icon: icon, zIndexOffset: isEmergency ? 500 : 0}).addTo(_leafletMap).bindPopup(
                     '<div style="font-family:Poppins,sans-serif;font-size:13px;line-height:1.5;">' +
                     '<strong>' + c.name + '</strong>' + sosBadge + '<br>' +
                     '<span style="color:#888;">' + c.city + '</span>' +
-                    (c.addr ? '<br><span style="font-size:11px;color:#999;">' + c.addr + '</span>' : '') +
                     (c.tel ? '<br>Tel: <a href="tel:' + c.tel.replace(/\s/g,'') + '">' + c.tel + '</a>' : '') +
                     (c.hours ? '<br>' + c.hours : '') +
-                    specBadge + waBadge + navLink +
+                    specBadge + waBadge +
                     '</div>'
                 ).on('click', function() {
                     var card = document.getElementById('clinic-card-' + clinicIndex);
@@ -1985,35 +1879,23 @@
         function findNearestSOS(lat, lng) {
             var emergency = [];
             var regular = [];
-            function processClinic(c, source) {
-                if (c.lat && c.lng) {
-                    var dist = haversine(lat, lng, c.lat, c.lng);
-                    if (dist > 100) return; // skip clinics > 100km away for performance
-                    var nc = (typeof normalizeClinic === 'function') ? normalizeClinic(c) : c;
-                    var item = {clinic: nc, dist: dist, region: source};
-                    if (nc.sos === 1 || nc.type === 'hospital' || nc.type === 'ambulance') {
-                        emergency.push(item);
-                    } else {
-                        regular.push(item);
-                    }
-                }
-            }
-            // Search physioData (CZ, SK, PL, DE, AT)
             for (var key in physioData) {
                 if (!physioData[key].clinics) continue;
-                physioData[key].clinics.forEach(function(c) { processClinic(c, key); });
-            }
-            // Search countryData (all other loaded countries)
-            if (window.countryData) {
-                for (var cc in window.countryData) {
-                    var arr = window.countryData[cc];
-                    if (Array.isArray(arr)) {
-                        arr.forEach(function(c) { processClinic(c, cc); });
+                physioData[key].clinics.forEach(function(c) {
+                    if (c.lat && c.lng) {
+                        var dist = haversine(lat, lng, c.lat, c.lng);
+                        var item = {clinic: c, dist: dist, region: key};
+                        if (c.sos === 1 || c.type === 'hospital' || c.type === 'ambulance') {
+                            emergency.push(item);
+                        } else {
+                            regular.push(item);
+                        }
                     }
-                }
+                });
             }
             emergency.sort(function(a, b) { return a.dist - b.dist; });
             regular.sort(function(a, b) { return a.dist - b.dist; });
+            // Emergency first, then nearest regular clinics
             var results = emergency.slice(0, 5);
             var remaining = 10 - results.length;
             if (remaining > 0) {
@@ -2033,7 +1915,7 @@
                 var isEmerg = c.sos === 1 || c.type === 'hospital' || c.type === 'ambulance';
                 var distText = r.dist < 1 ? Math.round(r.dist * 1000) + ' m' : r.dist.toFixed(1) + ' km';
                 var telClean = c.tel ? c.tel.replace(/\s/g, '') : '';
-                var telPrefix = '';
+                var telPrefix = (telClean && telClean.indexOf('+') === 0) ? '' : '+420';
                 var cardBorder = isEmerg ? 'border-left:3px solid #dc2626;' : 'border-left:3px solid #3b82f6;';
                 html += '<div class="sos-card" style="' + cardBorder + '">';
                 if (isEmerg) html += '<span style="background:#dc2626;color:#fff;font-size:9px;padding:1px 6px;border-radius:4px;font-weight:700;">SOS 24/7</span> ';
@@ -2050,11 +1932,6 @@
                 }
                 if (c.wa) {
                     html += ' <a href="https://wa.me/' + c.wa + '" target="_blank" class="sos-call" style="background:#25D366;">WhatsApp</a>';
-                }
-                // Navigation button — Google Maps directions
-                if (c.lat && c.lng) {
-                    var navUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + c.lat + ',' + c.lng;
-                    html += '<br><a href="' + navUrl + '" target="_blank" class="sos-call" style="background:#1d4ed8;margin-top:6px;">NAVIGOVAT</a>';
                 }
                 html += '</div>';
             });
